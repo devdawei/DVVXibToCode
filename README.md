@@ -1,6 +1,6 @@
 DVVXibToCode
 ===========
-根据 xib 文件自动生成属性、添加视图、约束和Getter方法代码。
+根据 xib 文件自动生成属性、添加视图、约束(使用[PureLayout](https://github.com/PureLayout/PureLayout))和Getter方法代码。
 
 使用方式
 -------

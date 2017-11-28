@@ -36,6 +36,7 @@ xib文件注意事项
 - UIButton：Type(Custom、System)，State Config(Default)，Title(Plain)
 - UIImageView：Image
 - UITableView：Style(Plain、Grouped)
+- UISwitch：暂无
 
 自动生成效果
 ----------

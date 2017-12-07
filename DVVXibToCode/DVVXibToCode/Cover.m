@@ -27,8 +27,9 @@ static NSString * const kViewTypeUITextField = @"textField";
 static NSString * const kViewTypeUITextView = @"textView";
 static NSString * const kViewTypeUIButton = @"button";
 static NSString * const kViewTypeUIImageView = @"imageView";
-static NSString * const kViewTypeUITableView = @"tableView";
 static NSString * const kViewTypeUISwitch = @"switch";
+static NSString * const kViewTypeUITableView = @"tableView";
+static NSString * const kViewTypeUIScrollView = @"scrollView";
 static NSString * const kSuperViewID = @"__superViewID";
 static NSString * const kSubviews = @"__subviews";
 
@@ -56,7 +57,7 @@ static NSString * const kUIImageViewImage = @"_image";
 // UITableView
 static NSString * const kUITableViewStyle = @"_style";
 
-@interface Cover ()
+@interface Cover () <NSXMLParserDelegate>
 
 @property (nonatomic, assign) CoverXibType xibType;
 
@@ -65,11 +66,9 @@ static NSString * const kUITableViewStyle = @"_style";
 @property (nonatomic, copy) NSMutableString *addSubviewsCode;
 @property (nonatomic, copy) NSMutableString *gettersCode;
 
-@end
-
-@interface Cover ()
-
 @property (nonatomic, strong) NSMutableDictionary<NSString*, NSDictionary<NSString *, id> *> *viewsInfo;
+@property (nonatomic, strong) NSMutableArray<NSString *> *viewsOrder;
+@property (nonatomic, assign) BOOL canParseViewsOrder;
 
 @end
 
@@ -107,6 +106,9 @@ static NSString * const kUITableViewStyle = @"_style";
     NSLog(@"root:\n%@", root);
     NSLog(@"view:\n%@", view);
     
+    // 寻找视图顺序
+    [self findViewsOrderWithXibData:data];
+    
     // 寻找到所有的视图
     [self findViewFromDict:view superViewID:view[kViewId] viewType:kViewTypeUIView isRootView:YES];
     // 寻找到子视图
@@ -143,15 +145,90 @@ static NSString * const kUITableViewStyle = @"_style";
     return mstr.copy;
 }
 
+#pragma mark -
+
+- (void)findViewsOrderWithXibData:(NSData *)data {
+    
+    NSXMLParser *parser = [[NSXMLParser alloc] initWithData:data];
+    parser.delegate = self;
+    [parser parse];
+}
+
+#pragma mark - NSXMLParserDelegate
+
+- (void)parserDidStartDocument:(NSXMLParser *)parser {
+    
+    self.canParseViewsOrder = NO;
+}
+
+- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict {
+    
+    switch (_xibType) {
+        case CoverXibTypeUIView:
+        case CoverXibTypeUIViewController:
+            if (!self.canParseViewsOrder) {
+                self.canParseViewsOrder = YES;
+            }
+            break;
+        case CoverXibTypeUITableViewCell:
+            if (!self.canParseViewsOrder) {
+                if ([elementName isEqualToString:@"tableViewCellContentView"]) {
+                    if (attributeDict[@"id"]) {
+                        [self.viewsOrder addObject:attributeDict[@"id"]];
+                    }
+                    self.canParseViewsOrder = YES;
+                }
+            }
+            break;
+        case CoverXibTypeUICollectionViewCell:
+        {
+            if (!self.canParseViewsOrder) {
+                if ([elementName isEqualToString:@"collectionViewCell"]) {
+                    if (attributeDict[@"id"]) {
+                        [self.viewsOrder addObject:attributeDict[@"id"]];
+                    }
+                    self.canParseViewsOrder = YES;
+                }
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+    
+    if (self.canParseViewsOrder) {
+        static NSArray<NSString *> *availableClassArray = nil;
+        if (!availableClassArray) {
+            availableClassArray = @[@"view",
+                                    @"label",
+                                    @"textField",
+                                    @"textView",
+                                    @"button",
+                                    @"imageView",
+                                    @"switch",
+                                    @"tableView",
+                                    @"scrollView",
+                                    ];
+        }
+        if ([availableClassArray containsObject:elementName]) {
+            if (attributeDict[@"id"]) {
+                [self.viewsOrder addObject:attributeDict[@"id"]];
+            }
+        }
+    }
+}
+
 #pragma mark - 生成属性代码
 
 - (void)generatePropertiesCode {
     
     _propertiesCode = [NSMutableString string];
     
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (!JudgeIsRoot(obj[kViewUserLabel])) {
-            [_propertiesCode appendFormat:@"@property (nonatomic, strong) %@ *%@;\n", ViewTypeToClassName(obj[kViewType]), obj[kViewUserLabel]];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        if (!JudgeIsRoot(viewInfo[kViewUserLabel])) {
+            [_propertiesCode appendFormat:@"@property (nonatomic, strong) %@ *%@;\n", ViewTypeToClassName(viewInfo[kViewType]), viewInfo[kViewUserLabel]];
         }
     }];
 }
@@ -162,33 +239,16 @@ static NSString * const kUITableViewStyle = @"_style";
     
     _addSubviewsCode = [NSMutableString string];
     
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (JudgeIsRoot(obj[kViewUserLabel])) {
-            [self addViewCodeWithViewID:key];
-            *stop = YES;
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        NSMutableArray<NSString *> *subViewArray = viewInfo[kSubviews];
+        if (subViewArray.count) {
+            // 添加子视图
+            [subViewArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                NSString *str = [NSString stringWithFormat:@"[%@ addSubview:%@];", [self handleViewName:viewInfo[kViewUserLabel]], [self handleViewName:self.viewsInfo[obj][kViewUserLabel]]];
+                [self.addSubviewsCode appendFormat:@"%@\n", str];
+            }];
         }
-    }];
-}
-
-- (void)addViewCodeWithViewID:(NSString *)viewID {
-    
-    __block NSMutableArray<NSString *> *subViewArray = [NSMutableArray array];
-    // 寻找子视图
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (!JudgeIsRoot(obj[kViewUserLabel]) &&
-            obj[kSuperViewID] == viewID) {
-            [subViewArray addObject:key];
-        }
-    }];
-    // 添加子视图
-    [subViewArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSString *str = [NSString stringWithFormat:@"[%@ addSubview:%@];", [self handleViewName:self.viewsInfo[viewID][kViewUserLabel]], [self handleViewName:self.viewsInfo[obj][kViewUserLabel]]];
-        [self.addSubviewsCode appendFormat:@"%@\n", str];
-    }];
-    
-    // 递归
-    [subViewArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [self addViewCodeWithViewID:obj];
     }];
 }
 
@@ -198,23 +258,28 @@ static NSString * const kUITableViewStyle = @"_style";
     
     _layoutsCode = [NSMutableString string];
     
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        id constraint =  obj[kViewConstraint];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        id constraint =  viewInfo[kViewConstraint];
         if ([constraint isKindOfClass:[NSArray class]]) {
             [((NSArray<NSDictionary *> *)constraint)  enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull subobj, NSUInteger idx, BOOL * _Nonnull stop) {
-                NSString *str = [self layoutCodeWithConstraintDict:subobj viewInfo:obj];
+                NSString *str = [self layoutCodeWithConstraintDict:subobj viewInfo:viewInfo];
                 [self.layoutsCode appendFormat:@"%@\n", str];
             }];
         } else if ([constraint isKindOfClass:[NSDictionary class]]) {
-            NSString *str = [self layoutCodeWithConstraintDict:constraint viewInfo:obj];
+            NSString *str = [self layoutCodeWithConstraintDict:constraint viewInfo:viewInfo];
             [self.layoutsCode appendFormat:@"%@\n", str];
         }
-    }];
-    
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        NSString *str = [self huggingCompressionWithViewInfo:obj];
+        NSString *str = [self huggingCompressionWithViewInfo:viewInfo];
         if (str && str.length) {
             [self.layoutsCode appendFormat:@"%@\n", str];
+        }
+        
+        if (idx != self.viewsOrder.count - 1) {
+            // 视图的约束之间添加空格
+            if (self.layoutsCode.length) {
+                [self.layoutsCode appendString:@"\n"];
+            }
         }
     }];
 }
@@ -398,16 +463,16 @@ static NSString * const kUITableViewStyle = @"_style";
     
     NSMutableArray *array = [NSMutableArray array];
     if (viewInfo[kHorizontalHugging]) {
-        [array addObject:[NSString stringWithFormat:@"[%@ setContentHuggingPriority:%@ forAxis:UILayoutConstraintAxisVertical];", viewName, viewInfo[kHorizontalHugging]]];
+        [array addObject:[NSString stringWithFormat:@"[%@ setContentHuggingPriority:%@ forAxis:UILayoutConstraintAxisHorizontal];", viewName, viewInfo[kHorizontalHugging]]];
     }
     if (viewInfo[kVerticalHugging]) {
         [array addObject:[NSString stringWithFormat:@"[%@ setContentHuggingPriority:%@ forAxis:UILayoutConstraintAxisVertical];", viewName, viewInfo[kVerticalHugging]]];
     }
     if (viewInfo[kHorizontalCompressionResistance]) {
-        [array addObject:[NSString stringWithFormat:@"[%@ setContentHuggingPriority:%@ forAxis:UILayoutConstraintAxisVertical];", viewName, viewInfo[kHorizontalCompressionResistance]]];
+        [array addObject:[NSString stringWithFormat:@"[%@ setContentCompressionResistancePriority:%@ forAxis:UILayoutConstraintAxisHorizontal];", viewName, viewInfo[kHorizontalCompressionResistance]]];
     }
     if (viewInfo[kVerticalCompressionResistance]) {
-        [array addObject:[NSString stringWithFormat:@"[%@ setContentHuggingPriority:%@ forAxis:UILayoutConstraintAxisVertical];", viewName, viewInfo[kVerticalCompressionResistance]]];
+        [array addObject:[NSString stringWithFormat:@"[%@ setContentCompressionResistancePriority:%@ forAxis:UILayoutConstraintAxisVertical];", viewName, viewInfo[kVerticalCompressionResistance]]];
     }
     return [array componentsJoinedByString:@"\n"];
 }
@@ -418,54 +483,62 @@ static NSString * const kUITableViewStyle = @"_style";
     
     _gettersCode = [NSMutableString string];
     
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (!JudgeIsRoot(obj[kViewUserLabel])) {
-            NSMutableString *mstr = [NSMutableString stringWithString:[self methodBeginLinesWithViewInfo:obj]];
-            if ([obj[kViewType] isEqualToString:kViewTypeUIView]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-            } else if ([obj[kViewType] isEqualToString:kViewTypeUILabel] ||
-                       [obj[kViewType] isEqualToString:kViewTypeUITextField] ||
-                       [obj[kViewType] isEqualToString:kViewTypeUITextView]) {
-                if ([obj[kViewType] isEqualToString:kViewTypeUILabel]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-                    if (obj[kText]) {
-                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", obj[kViewUserLabel], obj[kText]];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        if (!JudgeIsRoot(viewInfo[kViewUserLabel])) {
+            NSMutableString *mstr = [NSMutableString stringWithString:[self methodBeginLinesWithViewInfo:viewInfo]];
+            if ([viewInfo[kViewType] isEqualToString:kViewTypeUIView]) {
+                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUILabel] ||
+                       [viewInfo[kViewType] isEqualToString:kViewTypeUITextField] ||
+                       [viewInfo[kViewType] isEqualToString:kViewTypeUITextView]) {
+                if ([viewInfo[kViewType] isEqualToString:kViewTypeUILabel]) {
+                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                    if (viewInfo[kText]) {
+                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kText]];
                     }
-                } else if ([obj[kViewType] isEqualToString:kViewTypeUITextField]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-                    if (obj[kTextFieldPlaceholder]) {
-                        [mstr appendFormat:@"        _%@.placeholder = @\"%@\";\n", obj[kViewUserLabel], obj[kTextFieldPlaceholder]];
+                } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextField]) {
+                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                    if (viewInfo[kTextFieldPlaceholder]) {
+                        [mstr appendFormat:@"        _%@.placeholder = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kTextFieldPlaceholder]];
                     }
-                } else if ([obj[kViewType] isEqualToString:kViewTypeUITextView]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-                    if (obj[kTextViewString]) {
-                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", obj[kViewUserLabel], obj[kTextViewString][kTextViewText]];
-                    }
-                }
-                if (obj[kTextAlignment]) {
-                    [mstr appendFormat:@"        _%@.textAlignment = %@;\n", obj[kViewUserLabel], obj[kTextAlignment]];
-                }
-            } else if ([obj[kViewType] isEqualToString:kViewTypeUIButton]) {
-                [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-                if (obj[kUIButtonState]) {
-                    if (obj[kUIButtonState][kUIButtonTitle]) {
-                        [mstr appendFormat:@"        [_%@ setTitle:@\"%@\" forState:UIControlStateNormal];\n", obj[kViewUserLabel], obj[kUIButtonState][kUIButtonTitle]];
+                } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextView]) {
+                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                    if (viewInfo[kTextViewString]) {
+                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kTextViewString][kTextViewText]];
                     }
                 }
-            } else if ([obj[kViewType] isEqualToString:kViewTypeUIImageView]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
-                if (obj[kUIImageViewImage]) {
-                    if (obj[kUIImageViewImage]) {
-                        [mstr appendFormat:@"        _%@.image = [UIImage imageNamed:@\"%@\"];\n", obj[kViewUserLabel], obj[kUIImageViewImage]];
+                if (viewInfo[kTextAlignment]) {
+                    [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], viewInfo[kTextAlignment]];
+                }
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIButton]) {
+                [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                if (viewInfo[kUIButtonState]) {
+                    if (viewInfo[kUIButtonState][kUIButtonTitle]) {
+                        [mstr appendFormat:@"        [_%@ setTitle:@\"%@\" forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], viewInfo[kUIButtonState][kUIButtonTitle]];
                     }
                 }
-            } else if ([obj[kViewType] isEqualToString:kViewTypeUITableView]) {
-                [mstr appendFormat:@"        _%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];\n", obj[kViewUserLabel], obj[kUITableViewStyle]];
-            } else if ([obj[kViewType] isEqualToString:kViewTypeUISwitch]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", obj[kViewUserLabel], ViewTypeToClassName(obj[kViewType])];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIImageView]) {
+                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                if (viewInfo[kUIImageViewImage]) {
+                    if (viewInfo[kUIImageViewImage]) {
+                        [mstr appendFormat:@"        _%@.image = [UIImage imageNamed:@\"%@\"];\n", viewInfo[kViewUserLabel], viewInfo[kUIImageViewImage]];
+                    }
+                }
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUISwitch]) {
+                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITableView]) {
+                [mstr appendFormat:@"        _%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];\n", viewInfo[kViewUserLabel], viewInfo[kUITableViewStyle]];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIScrollView]) {
+                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
             }
-            [mstr appendFormat:@"%@\n", [self methodEndLinesWithViewInfo:obj]];
+            [mstr appendFormat:@"%@\n", [self methodEndLinesWithViewInfo:viewInfo]];
             [self.gettersCode appendFormat:@"%@", mstr];
+            
+            if (idx != self.viewsOrder.count - 1) {
+                // Getter方法之间添加空格
+                [self.gettersCode appendString:@"\n"];
+            }
         }
     }];
 }
@@ -488,7 +561,7 @@ static NSString * const kUITableViewStyle = @"_style";
     NSString *third = @"}";
     [mstr appendFormat:@"%@\n", first];
     [mstr appendFormat:@"%@\n", second];
-    [mstr appendFormat:@"%@\n", third];
+    [mstr appendFormat:@"%@", third];
     return mstr;
 }
 
@@ -538,10 +611,12 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
         return @"UIButton";
     } else if ([viewType isEqualToString:kViewTypeUIImageView]) {
         return @"UIImageView";
-    } else if ([viewType isEqualToString:kViewTypeUITableView]) {
-        return @"UITableView";
     } else if ([viewType isEqualToString:kViewTypeUISwitch]) {
         return @"UISwitch";
+    } else if ([viewType isEqualToString:kViewTypeUITableView]) {
+        return @"UITableView";
+    } else if ([viewType isEqualToString:kViewTypeUIScrollView]) {
+        return @"UIScrollView";
     }
     return @"UntreatedViewType"; // 未处理的视图类型
 };
@@ -562,10 +637,11 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
     
     __block NSMutableArray<NSString *> *subViewArray = [NSMutableArray array];
     // 寻找子视图
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (!JudgeIsRoot(obj[kViewUserLabel]) &&
-            obj[kSuperViewID] == viewID) {
-            [subViewArray addObject:key];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        if (!JudgeIsRoot(viewInfo[kViewUserLabel]) &&
+            [viewInfo[kSuperViewID] isEqualToString:viewID]) {
+            [subViewArray addObject:obj];
         }
     }];
     // 添加子视图
@@ -597,6 +673,7 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
     d[kViewConstraint] = dict[@"constraints"][@"constraint"];
     d[kSuperViewID] = superViewID;
     d[kViewType] = viewType;
+    // 保存视图
     self.viewsInfo[_id] = d;
     
     if (dict[kHorizontalHugging]) {
@@ -694,6 +771,13 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
         _viewsInfo = [NSMutableDictionary dictionary];
     }
     return _viewsInfo;
+}
+
+- (NSMutableArray<NSString *> *)viewsOrder {
+    if (!_viewsOrder) {
+        _viewsOrder = [NSMutableArray array];
+    }
+    return _viewsOrder;
 }
 
 @end

@@ -241,13 +241,9 @@ static NSString * const kUITableViewStyle = @"_style";
     
     [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
-        NSMutableArray<NSString *> *subViewArray = viewInfo[kSubviews];
-        if (subViewArray.count) {
-            // 添加子视图
-            [subViewArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                NSString *str = [NSString stringWithFormat:@"[%@ addSubview:%@];", [self handleViewName:viewInfo[kViewUserLabel]], [self handleViewName:self.viewsInfo[obj][kViewUserLabel]]];
-                [self.addSubviewsCode appendFormat:@"%@\n", str];
-            }];
+        if (!JudgeIsRoot(viewInfo[kViewUserLabel])) {
+            NSString *str = [NSString stringWithFormat:@"[%@ addSubview:%@];", [self handleViewName:self.viewsInfo[viewInfo[kSuperViewID]][kViewUserLabel]], [self handleViewName:self.viewsInfo[obj][kViewUserLabel]]];
+            [self.addSubviewsCode appendFormat:@"%@\n", str];
         }
     }];
 }
@@ -625,9 +621,10 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
 
 - (void)findSubviews {
     
-    [self.viewsInfo enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *,id> * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (JudgeIsRoot(obj[kViewUserLabel])) {
-            [self findSubviewsWithViewID:key];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        if (JudgeIsRoot(viewInfo[kViewUserLabel])) {
+            [self findSubviewsWithViewID:obj];
             *stop = YES;
         }
     }];

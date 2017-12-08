@@ -62,7 +62,7 @@ static NSString * const kUITableViewStyle = @"_style";
 @property (nonatomic, assign) CoverXibType xibType;
 
 @property (nonatomic, copy) NSMutableString *propertiesCode;
-@property (nonatomic, copy) NSMutableString *layoutsCode;
+@property (nonatomic, copy) NSString *layoutsCode;
 @property (nonatomic, copy) NSMutableString *addSubviewsCode;
 @property (nonatomic, copy) NSMutableString *gettersCode;
 
@@ -136,7 +136,7 @@ static NSString * const kUITableViewStyle = @"_style";
     
     [mstr appendString:@"\n==============================================================\n"];
     [mstr appendString:_layoutsCode];
-    [mstr appendString:@"==============================================================\n\n"];
+    [mstr appendString:@"\n==============================================================\n\n"];
     
     [mstr appendString:@"\n==============================================================\n"];
     [mstr appendString:_gettersCode];
@@ -254,30 +254,41 @@ static NSString * const kUITableViewStyle = @"_style";
     
     _layoutsCode = [NSMutableString string];
     
+    __block NSMutableArray<NSString *> *layoutsCodeArray = [NSMutableArray array];
     [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
         id constraint =  viewInfo[kViewConstraint];
         if ([constraint isKindOfClass:[NSArray class]]) {
             [((NSArray<NSDictionary *> *)constraint)  enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull subobj, NSUInteger idx, BOOL * _Nonnull stop) {
                 NSString *str = [self layoutCodeWithConstraintDict:subobj viewInfo:viewInfo];
-                [self.layoutsCode appendFormat:@"%@\n", str];
+                [layoutsCodeArray addObject:str];
             }];
         } else if ([constraint isKindOfClass:[NSDictionary class]]) {
             NSString *str = [self layoutCodeWithConstraintDict:constraint viewInfo:viewInfo];
-            [self.layoutsCode appendFormat:@"%@\n", str];
+            [layoutsCodeArray addObject:str];
         }
         NSString *str = [self huggingCompressionWithViewInfo:viewInfo];
         if (str && str.length) {
-            [self.layoutsCode appendFormat:@"%@\n", str];
-        }
-        
-        if (idx != self.viewsOrder.count - 1) {
-            // 视图的约束之间添加空格
-            if (self.layoutsCode.length) {
-                [self.layoutsCode appendString:@"\n"];
-            }
+            [layoutsCodeArray addObject:str];
         }
     }];
+    
+    // 整理约束代码顺序
+    __block NSMutableArray<NSString *> *layoutsCodeOrderArray = [NSMutableArray array];
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+            NSMutableArray<NSString *> *itemArray = [NSMutableArray array];
+            [layoutsCodeArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([[obj componentsSeparatedByString:@" "].firstObject hasSuffix:viewInfo[kViewUserLabel]]) {
+                    [itemArray addObject:obj];
+                }
+            }];
+            if (itemArray.count) {
+                [layoutsCodeOrderArray addObject:[itemArray componentsJoinedByString:@"\n"]];
+            }
+    }];
+    
+    _layoutsCode = [layoutsCodeOrderArray componentsJoinedByString:@"\n\n"];
 }
 
 - (NSString *)layoutCodeWithConstraintDict:(NSDictionary<NSString *, id> *)constraintDict viewInfo:(NSDictionary<NSString *, id> *)viewInfo {

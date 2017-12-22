@@ -30,13 +30,45 @@ xib文件注意事项
 
 目前所支持的控件及属性
 ------------------
-- UILabel：Text(Plain)，Alignment
-- UITextField：Placeholder，Alignment
-- UITextView：Text(Plain)，Alignment
-- UIButton：Type(Custom、System)，State Config(Default)，Title(Plain)
-- UIImageView：Image
-- UITableView：Style(Plain、Grouped)
-- UISwitch：暂无
+** 颜色设置：目前仅支持通过 [RGB Sliders](https://raw.githubusercontent.com/devdawei/DVVXibToCode/master/DocLinkImg/RGB_Sliders.png) 设置 **
+** 字体设置：目前仅支持设置 Style(Regular、Bold) 和 Size **
+- UIView
+  - Background
+
+- UILabel
+  - Text(Plain)
+  - Color
+  - Font
+  - Alignment
+
+- UITextField
+  - Color
+  - Font
+  - Alignment
+  - Placeholder
+
+- UITextView
+  - Text(Plain)
+  - Color
+  - Font
+  - Alignment
+
+- UIButton
+  - Type(Custom、System)
+  - State Config(Default)
+  - Title(Plain)
+  - Font
+  - Text Color
+
+- UIImageView
+  - Image
+
+- UISwitch
+  
+- UITableView
+  - Style(Plain、Grouped)
+
+- UIScrollView
 
 自动生成效果
 ----------

@@ -32,43 +32,36 @@ xib文件注意事项
 ------------------
 __颜色设置：目前仅支持通过 [RGB Sliders](https://raw.githubusercontent.com/devdawei/DVVXibToCode/master/DocLinkImg/RGB_Sliders.png) 设置。__  
 __字体设置：目前仅支持设置 Style(Regular、Bold) 和 Size。__
-- UIView
-  - Background
 
-- UILabel
-  - Text(Plain)
-  - Color
-  - Font
-  - Alignment
-
-- UITextField
-  - Color
-  - Font
-  - Alignment
-  - Placeholder
-
-- UITextView
-  - Text(Plain)
-  - Color
-  - Font
-  - Alignment
-
-- UIButton
-  - Type(Custom、System)
-  - State Config(Default)
-  - Title(Plain)
-  - Font
-  - Text Color
-
-- UIImageView
-  - Image
-
-- UISwitch
-  
-- UITableView
-  - Style(Plain、Grouped)
-
-- UIScrollView
+* __UIView__
+    - Background
+* __UILabel__
+    - Text(Plain)
+    - Color
+    - Font
+    - Alignment
+* __UITextField__
+    - Color
+    - Font
+    - Alignment
+    - Placeholder
+* __UITextView__
+    - Text(Plain)
+    - Color
+    - Font
+    - Alignment
+* __UIButton__
+    - Type(Custom、System)
+    - State Config(Default)
+    - Title(Plain)
+    - Font
+    - Text Color
+* __UIImageView__
+    - Image
+* __UISwitch__
+* __UITableView__
+    - Style(Plain、Grouped)
+* __UIScrollView__
 
 自动生成效果
 ----------

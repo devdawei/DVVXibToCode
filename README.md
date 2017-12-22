@@ -30,7 +30,7 @@ xib文件注意事项
 
 目前所支持的控件及属性
 ------------------
-** 颜色设置：目前仅支持通过 [RGB Sliders](https://raw.githubusercontent.com/devdawei/DVVXibToCode/master/DocLinkImg/RGB_Sliders.png) 设置 **
+** 颜色设置：目前仅支持通过 [RGB Sliders](https://raw.githubusercontent.com/devdawei/DVVXibToCode/master/DocLinkImg/RGB_Sliders.png) 设置 **  
 ** 字体设置：目前仅支持设置 Style(Regular、Bold) 和 Size **
 - UIView
   - Background

@@ -546,26 +546,24 @@ static NSString * const kUITableViewStyle = @"_style";
                         [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], str];
                     }
                 }
-                if (viewInfo[kFontDescription]) {
-                    NSDictionary *fontDescDict = viewInfo[kFontDescription];
-                    if ([fontDescDict[@"_type"] isEqualToString:@"boldSystem"]) {
-                        [mstr appendFormat:@"        _%@.font = [UIFont boldSystemFontOfSize:%@];\n", viewInfo[kViewUserLabel], fontDescDict[@"_pointSize"]];
-                    } else if ([fontDescDict[@"_type"] isEqualToString:@"system"]) {
-                        [mstr appendFormat:@"        _%@.font = [UIFont systemFontOfSize:%@];\n", viewInfo[kViewUserLabel], fontDescDict[@"_pointSize"]];
-                    }
+                NSString *font = [self fontWithViewInfo:viewInfo];
+                if (font) {
+                    [mstr appendFormat:@"        _%@.font = %@;\n", viewInfo[kViewUserLabel], font];
                 }
-                if (viewInfo[kColorInfo]) {
-                    NSString *str = [self textColorWithViewInfo:viewInfo];
-                    if (str) {
-                        [mstr appendString:str];
-                    }
+                NSString *textColor = [self textColorWithViewInfo:viewInfo];
+                if (textColor) {
+                    [mstr appendString:textColor];
                 }
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIButton]) {
                 [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                NSString *font = [self fontWithViewInfo:viewInfo];
+                if (font) {
+                    [mstr appendFormat:@"        _%@.titleLabel.font = %@;\n", viewInfo[kViewUserLabel], font];
+                }
                 if (viewInfo[kUIButtonState]) {
-                    NSString *str = [self titleColorWithViewInfo:viewInfo];
-                    if (str) {
-                        [mstr appendString:str];
+                    NSString *titleColor = [self titleColorWithViewInfo:viewInfo];
+                    if (titleColor) {
+                        [mstr appendString:titleColor];
                     }
                     if (viewInfo[kUIButtonState][kUIButtonTitle]) {
                         [mstr appendFormat:@"        [_%@ setTitle:@\"%@\" forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], viewInfo[kUIButtonState][kUIButtonTitle]];
@@ -591,11 +589,9 @@ static NSString * const kUITableViewStyle = @"_style";
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIScrollView]) {
                 [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
             }
-            if (viewInfo[kColorInfo]) {
-                NSString *str = [self backgroundColorWithViewInfo:viewInfo];
-                if (str) {
-                    [mstr appendString:str];
-                }
+            NSString *backgroundColor = [self backgroundColorWithViewInfo:viewInfo];
+            if (backgroundColor) {
+                [mstr appendString:backgroundColor];
             }
             
             [mstr appendFormat:@"%@\n", [self methodEndLinesWithViewInfo:viewInfo]];
@@ -629,6 +625,22 @@ static NSString * const kUITableViewStyle = @"_style";
     [mstr appendFormat:@"%@\n", second];
     [mstr appendFormat:@"%@", third];
     return mstr;
+}
+
+- (NSString *)fontWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSDictionary *fontDescDict = viewInfo[kFontDescription];
+    if (!fontDescDict) {
+        return nil;
+    }
+    
+    if ([fontDescDict[@"_type"] isEqualToString:@"boldSystem"]) {
+        return [NSString stringWithFormat:@"[UIFont boldSystemFontOfSize:%@]", fontDescDict[@"_pointSize"]];
+    } else if ([fontDescDict[@"_type"] isEqualToString:@"system"]) {
+        return [NSString stringWithFormat:@"[UIFont systemFontOfSize:%@]", fontDescDict[@"_pointSize"]];
+    } else {
+        return nil;
+    }
 }
 
 - (NSString *)backgroundColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
@@ -670,27 +682,39 @@ static NSString * const kUITableViewStyle = @"_style";
     __block NSString *str = nil;
     
     NSString *kKey = @"_key";
-    NSString *kRed = @"_red";
-    NSString *kGreen = @"_green";
-    NSString *kBlue = @"_blue";
-    NSString *kAlpha = @"_alpha";
     
     if ([colorInfo isKindOfClass:[NSDictionary class]]) {
         NSDictionary *colorDict = colorInfo;
         if ([colorDict[kKey] isEqualToString:key]) {
-            str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+            str = [self colorWithDict:colorDict];
         }
     } if ([colorInfo isKindOfClass:[NSArray class]]) {
         NSArray<NSDictionary<NSString *, id> *> *colorsArray = colorInfo;
         [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
             if ([colorDict[kKey] isEqualToString:key]) {
-                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+                str = [self colorWithDict:colorDict];
                 *stop = YES;
             }
         }];
     }
     
     return str;
+}
+
+- (NSString *)colorWithDict:(NSDictionary *)colorDict {
+    
+    NSString *kColorSpace = @"_colorSpace";
+    NSString *kCustomColorSpace = @"_customColorSpace";
+    NSString *kRed = @"_red";
+    NSString *kGreen = @"_green";
+    NSString *kBlue = @"_blue";
+    NSString *kAlpha = @"_alpha";
+    
+    if ([colorDict[kColorSpace] isEqualToString:@"custom"] && [colorDict[kCustomColorSpace] isEqualToString:@"sRGB"]) {
+        return [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+    } else {
+        return nil;
+    }
 }
 
 #pragma mark -

@@ -11,6 +11,7 @@
 
 static NSString * const kViewId = @"_id";
 static NSString * const kViewUserLabel = @"_userLabel";
+static NSString * const kViewConstraints = @"constraints";
 static NSString * const kViewConstraint = @"constraint";
 
 static NSString * const kHorizontalHugging = @"_horizontalHuggingPriority";
@@ -105,17 +106,18 @@ static NSString * const kUITableViewStyle = @"_style";
         default:
             break;
     }
-    NSLog(@"root:\n%@", root);
-    NSLog(@"view:\n%@", view);
+//    NSLog(@"root:\n%@", root);
+//    NSLog(@"view:\n%@", view);
     
     // 寻找视图顺序
     [self findViewsOrderWithXibData:data];
-    
     // 寻找到所有的视图
     [self findViewFromDict:view superViewID:view[kViewId] viewType:kViewTypeUIView isRootView:YES];
     // 寻找到子视图
     [self findSubviews];
-    NSLog(@"viewsInfo:\n%@", self.viewsInfo);
+    [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSLog(@"\n%@\n%@", obj, self.viewsInfo[obj]);
+    }];
     
     // 生成属性代码
     [self generatePropertiesCode];
@@ -259,7 +261,7 @@ static NSString * const kUITableViewStyle = @"_style";
     __block NSMutableArray<NSString *> *layoutsCodeArray = [NSMutableArray array];
     [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
-        id constraint =  viewInfo[kViewConstraint];
+        id constraint =  viewInfo[kViewConstraints][kViewConstraint];
         if ([constraint isKindOfClass:[NSArray class]]) {
             [((NSArray<NSDictionary *> *)constraint)  enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull subobj, NSUInteger idx, BOOL * _Nonnull stop) {
                 NSString *str = [self layoutCodeWithConstraintDict:subobj viewInfo:viewInfo];
@@ -528,14 +530,28 @@ static NSString * const kUITableViewStyle = @"_style";
                     }
                 }
                 if (viewInfo[kTextAlignment]) {
-                    [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], viewInfo[kTextAlignment]];
+                    NSString *str = nil;
+                    if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentNatural]) {
+                        /*
+                         d[kTextAlignment] = @"NSTextAlignmentNatural"; // 默认对齐方式
+                         */
+                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentCenter]) {
+                        str = @"NSTextAlignmentCenter";
+                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentRight]) {
+                        str = @"NSTextAlignmentRight";
+                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentJustified]) {
+                        str = @"NSTextAlignmentJustified";
+                    }
+                    if (str) {
+                        [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], str];
+                    }
                 }
                 if (viewInfo[kFontDescription]) {
                     NSDictionary *fontDescDict = viewInfo[kFontDescription];
                     if ([fontDescDict[@"_type"] isEqualToString:@"boldSystem"]) {
-                        [mstr appendFormat:@"        _%@.font = [UIFont boldSystemFontOfSize:%.2f];\n", viewInfo[kViewUserLabel], [fontDescDict[@"_pointSize"] floatValue]];
+                        [mstr appendFormat:@"        _%@.font = [UIFont boldSystemFontOfSize:%@];\n", viewInfo[kViewUserLabel], fontDescDict[@"_pointSize"]];
                     } else if ([fontDescDict[@"_type"] isEqualToString:@"system"]) {
-                        [mstr appendFormat:@"        _%@.font = [UIFont systemFontOfSize:%.2f];\n", viewInfo[kViewUserLabel], [fontDescDict[@"_pointSize"] floatValue]];
+                        [mstr appendFormat:@"        _%@.font = [UIFont systemFontOfSize:%@];\n", viewInfo[kViewUserLabel], fontDescDict[@"_pointSize"]];
                     }
                 }
                 if (viewInfo[kColorInfo]) {
@@ -547,6 +563,10 @@ static NSString * const kUITableViewStyle = @"_style";
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIButton]) {
                 [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
                 if (viewInfo[kUIButtonState]) {
+                    NSString *str = [self titleColorWithViewInfo:viewInfo];
+                    if (str) {
+                        [mstr appendString:str];
+                    }
                     if (viewInfo[kUIButtonState][kUIButtonTitle]) {
                         [mstr appendFormat:@"        [_%@ setTitle:@\"%@\" forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], viewInfo[kUIButtonState][kUIButtonTitle]];
                     }
@@ -561,7 +581,13 @@ static NSString * const kUITableViewStyle = @"_style";
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUISwitch]) {
                 [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITableView]) {
-                [mstr appendFormat:@"        _%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];\n", viewInfo[kViewUserLabel], viewInfo[kUITableViewStyle]];
+                NSString *str = nil;
+                if ([viewInfo[kUITableViewStyle] isEqualToString:@"plain"]) {
+                    str = @"UITableViewStylePlain";
+                }  else if ([viewInfo[kUITableViewStyle] isEqualToString:@"grouped"]) {
+                    str = @"UITableViewStyleGrouped";
+                }
+                [mstr appendFormat:@"        _%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];\n", viewInfo[kViewUserLabel], str];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIScrollView]) {
                 [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
             }
@@ -607,29 +633,7 @@ static NSString * const kUITableViewStyle = @"_style";
 
 - (NSString *)backgroundColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
     
-    __block NSString *str = nil;
-    
-    NSString *kKey = @"_key";
-    NSString *kRed = @"_red";
-    NSString *kGreen = @"_green";
-    NSString *kBlue = @"_blue";
-    NSString *kAlpha = @"_alpha";
-    if (viewInfo[kColorInfo]) {
-        if ([viewInfo[kColorInfo] isKindOfClass:[NSDictionary class]]) {
-            NSDictionary *colorDict = viewInfo[kColorInfo];
-            if ([colorDict[kKey] isEqualToString:@"backgroundColor"]) {
-                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
-            }
-        } if ([viewInfo[kColorInfo] isKindOfClass:[NSArray class]]) {
-            NSArray<NSDictionary<NSString *, id> *> *colorsArray = viewInfo[kColorInfo];
-            [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
-                if ([colorDict[kKey] isEqualToString:@"backgroundColor"]) {
-                    str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
-                    *stop = YES;
-                }
-            }];
-        }
-    }
+    NSString *str = [self colorWithKey:@"backgroundColor" colorInfo:viewInfo[kColorInfo]];
     if (str) {
         return [NSString stringWithFormat:@"        _%@.backgroundColor = %@;\n", viewInfo[kViewUserLabel], str];
     } else {
@@ -639,6 +643,30 @@ static NSString * const kUITableViewStyle = @"_style";
 
 - (NSString *)textColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
     
+    NSString *str = [self colorWithKey:@"textColor" colorInfo:viewInfo[kColorInfo]];
+    if (str) {
+        return [NSString stringWithFormat:@"        _%@.textColor = %@;\n", viewInfo[kViewUserLabel], str];
+    } else {
+        return nil;
+    }
+}
+
+- (NSString *)titleColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSString *str = [self colorWithKey:@"titleColor" colorInfo:viewInfo[kUIButtonState][kColorInfo]];
+    if (str) {
+        return [NSString stringWithFormat:@"        [_%@ setTitleColor:%@ forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], str];
+    } else {
+        return nil;
+    }
+}
+
+- (NSString *)colorWithKey:(NSString *)key colorInfo:(id)colorInfo {
+    
+    if (!key || !colorInfo) {
+        return nil;
+    }
+    
     __block NSString *str = nil;
     
     NSString *kKey = @"_key";
@@ -646,27 +674,23 @@ static NSString * const kUITableViewStyle = @"_style";
     NSString *kGreen = @"_green";
     NSString *kBlue = @"_blue";
     NSString *kAlpha = @"_alpha";
-    if (viewInfo[kColorInfo]) {
-        if ([viewInfo[kColorInfo] isKindOfClass:[NSDictionary class]]) {
-            NSDictionary *colorDict = viewInfo[kColorInfo];
-            if ([colorDict[kKey] isEqualToString:@"textColor"]) {
-                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
-            }
-        } if ([viewInfo[kColorInfo] isKindOfClass:[NSArray class]]) {
-            NSArray<NSDictionary<NSString *, id> *> *colorsArray = viewInfo[kColorInfo];
-            [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
-                if ([colorDict[kKey] isEqualToString:@"textColor"]) {
-                    str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
-                    *stop = YES;
-                }
-            }];
+    
+    if ([colorInfo isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *colorDict = colorInfo;
+        if ([colorDict[kKey] isEqualToString:key]) {
+            str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
         }
+    } if ([colorInfo isKindOfClass:[NSArray class]]) {
+        NSArray<NSDictionary<NSString *, id> *> *colorsArray = colorInfo;
+        [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
+            if ([colorDict[kKey] isEqualToString:key]) {
+                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+                *stop = YES;
+            }
+        }];
     }
-    if (str) {
-        return [NSString stringWithFormat:@"        _%@.textColor = %@;\n", viewInfo[kViewUserLabel], str];
-    } else {
-        return nil;
-    }
+    
+    return str;
 }
 
 #pragma mark -
@@ -763,9 +787,7 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
 
 - (void)findViewFromDict:(NSDictionary<NSString *, id> *)dict superViewID:(NSString *)superViewID viewType:(NSString *)viewType isRootView:(BOOL)isRootView {
     
-    NSMutableDictionary *d = [NSMutableDictionary dictionary];
-    NSString *_id = (NSString *)dict[kViewId];
-    d[kViewId] = _id;
+    NSMutableDictionary *d = dict.mutableCopy;
     if (isRootView) {
         d[kViewUserLabel] = kRootView;
     } else {
@@ -775,87 +797,11 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
             d[kViewUserLabel] = viewType;
         }
     }
-    d[kViewConstraint] = dict[@"constraints"][@"constraint"];
     d[kSuperViewID] = superViewID;
     d[kViewType] = viewType;
     // 保存视图
+    NSString *_id = (NSString *)dict[kViewId];
     self.viewsInfo[_id] = d;
-    
-    if (dict[kHorizontalHugging]) {
-        d[kHorizontalHugging] = dict[kHorizontalHugging];
-    }
-    if (dict[kVerticalHugging]) {
-        d[kVerticalHugging] = dict[kVerticalHugging];
-    }
-    if (dict[kHorizontalCompressionResistance]) {
-        d[kHorizontalCompressionResistance] = dict[kHorizontalCompressionResistance];
-    }
-    if (dict[kVerticalCompressionResistance]) {
-        d[kVerticalCompressionResistance] = dict[kVerticalCompressionResistance];
-    }
-    
-    if (dict[kColorInfo]) {
-        d[kColorInfo] = dict[kColorInfo];
-    }
-    
-    if ([viewType isEqualToString:kViewTypeUILabel] ||
-        [viewType isEqualToString:kViewTypeUITextField] ||
-        [viewType isEqualToString:kViewTypeUITextView]) {
-        if (dict[kTextAlignment]) {
-            if ([dict[kTextAlignment] isEqualToString:kTextAlignmentNatural]) {
-                /*
-                 d[kTextAlignment] = @"NSTextAlignmentNatural"; // 默认对齐方式
-                 */
-            } else if ([dict[kTextAlignment] isEqualToString:kTextAlignmentCenter]) {
-                d[kTextAlignment] = @"NSTextAlignmentCenter";
-            } else if ([dict[kTextAlignment] isEqualToString:kTextAlignmentRight]) {
-                d[kTextAlignment] = @"NSTextAlignmentRight";
-            } else if ([dict[kTextAlignment] isEqualToString:kTextAlignmentJustified]) {
-                d[kTextAlignment] = @"NSTextAlignmentJustified";
-            }
-        }
-        if (dict[kFontDescription]) {
-            d[kFontDescription] = dict[kFontDescription];
-        }
-        
-        if ([viewType isEqualToString:kViewTypeUILabel]) {
-            if (dict[kText]) {
-                d[kText] = dict[kText];
-            }
-        }
-        
-        if ([viewType isEqualToString:kViewTypeUITextField]) {
-            if (dict[kTextFieldPlaceholder]) {
-                d[kTextFieldPlaceholder] = dict[kTextFieldPlaceholder];
-            }
-        }
-        
-        if ([viewType isEqualToString:kViewTypeUITextView]) {
-            if (dict[kTextViewString]) {
-                d[kTextViewString] = dict[kTextViewString];
-            }
-        }
-    }
-    
-    if ([viewType isEqualToString:kViewTypeUIImageView]) {
-        if (dict[kUIImageViewImage]) {
-            d[kUIImageViewImage] = dict[kUIImageViewImage];
-        }
-    }
-    
-    if ([viewType isEqualToString:kViewTypeUIButton]) {
-        if (dict[kUIButtonState]) {
-            d[kUIButtonState] = dict[kUIButtonState];
-        }
-    }
-    
-    if ([viewType isEqualToString:kViewTypeUITableView]) {
-        if ([dict[kUITableViewStyle] isEqualToString:@"plain"]) {
-            d[kUITableViewStyle] = @"UITableViewStylePlain";
-        }  else if ([dict[kUITableViewStyle] isEqualToString:@"grouped"]) {
-            d[kUITableViewStyle] = @"UITableViewStyleGrouped";
-        }
-    }
     
     if ([dict objectForKey:@"subviews"]) {
         [self findSubviewsFromDict:dict[@"subviews"] superViewID:dict[kViewId]];

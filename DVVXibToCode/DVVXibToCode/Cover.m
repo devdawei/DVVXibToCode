@@ -40,6 +40,8 @@ static NSString * const kTextAlignmentNatural = @"natural";
 static NSString * const kTextAlignmentCenter = @"center";
 static NSString * const kTextAlignmentRight = @"right";
 static NSString * const kTextAlignmentJustified = @"justified";
+static NSString * const kFontDescription = @"fontDescription";
+static NSString * const kColorInfo = @"color";
 
 // UITextField
 static NSString * const kTextFieldPlaceholder = @"_placeholder";
@@ -335,7 +337,11 @@ static NSString * const kUITableViewStyle = @"_style";
     
     NSString * (^HandleMultiplier)(NSString *multiplier) = ^(NSString *multiplier) {
         NSArray<NSString *> *array = [multiplier componentsSeparatedByString:@":"];
-        return [NSString stringWithFormat:@"%.2f/%.2f",array.firstObject.floatValue, array.lastObject.floatValue];
+        if (array.count == 1) {
+            return [NSString stringWithFormat:@"%.2f",array.firstObject.floatValue];
+        } else {
+            return [NSString stringWithFormat:@"%.2f/%.2f",array.firstObject.floatValue, array.lastObject.floatValue];
+        }
     };
     
     if ([firstAttributeName isEqualToString:@"ALEdgeLeft"] ||
@@ -353,8 +359,14 @@ static NSString * const kUITableViewStyle = @"_style";
             }
         } else {  // secondItem 不是自己
             if ([firstAttributeName isEqualToString:secondAttributeName]) {
-                toSuper = YES;
-                viewName = GetViewName(kSecondItem);
+                if (constraintDict[kFirstItem] && constraintDict[kSecondItem]) {
+                    toSuper = NO;
+                    viewName = GetViewName(kFirstItem);
+                    ofViewName = GetViewName(kSecondItem);
+                } else {
+                    toSuper = YES;
+                    viewName = GetViewName(kSecondItem);
+                }
             } else {
                 toSuper = NO;
                 viewName = GetViewName(kFirstItem);
@@ -376,7 +388,7 @@ static NSString * const kUITableViewStyle = @"_style";
         [layoutStr appendString:@"];"];
     } else if ([firstAttributeName isEqualToString:@"ALAxisVertical"] ||
                [firstAttributeName isEqualToString:@"ALAxisHorizontal"]) {
-        if ([viewInfo[kSubviews] containsObject:constraintDict[kFirstItem]]) {
+        if ([viewInfo[kSubviews] containsObject:constraintDict[kFirstItem]] && [constraintDict[kSecondItem] isEqualToString:viewInfo[kViewId]]) {
             toSuper = YES;
         }
         viewName = GetViewName(kFirstItem);
@@ -491,7 +503,7 @@ static NSString * const kUITableViewStyle = @"_style";
     _gettersCode = [NSMutableString string];
     
     [self.viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSDictionary<NSString *,id> *viewInfo = self.viewsInfo[obj];
+        NSDictionary<NSString *, id> *viewInfo = self.viewsInfo[obj];
         if (!JudgeIsRoot(viewInfo[kViewUserLabel])) {
             NSMutableString *mstr = [NSMutableString stringWithString:[self methodBeginLinesWithViewInfo:viewInfo]];
             if ([viewInfo[kViewType] isEqualToString:kViewTypeUIView]) {
@@ -518,6 +530,20 @@ static NSString * const kUITableViewStyle = @"_style";
                 if (viewInfo[kTextAlignment]) {
                     [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], viewInfo[kTextAlignment]];
                 }
+                if (viewInfo[kFontDescription]) {
+                    NSDictionary *fontDescDict = viewInfo[kFontDescription];
+                    if ([fontDescDict[@"_type"] isEqualToString:@"boldSystem"]) {
+                        [mstr appendFormat:@"        _%@.font = [UIFont boldSystemFontOfSize:%.2f];\n", viewInfo[kViewUserLabel], [fontDescDict[@"_pointSize"] floatValue]];
+                    } else if ([fontDescDict[@"_type"] isEqualToString:@"system"]) {
+                        [mstr appendFormat:@"        _%@.font = [UIFont systemFontOfSize:%.2f];\n", viewInfo[kViewUserLabel], [fontDescDict[@"_pointSize"] floatValue]];
+                    }
+                }
+                if (viewInfo[kColorInfo]) {
+                    NSString *str = [self textColorWithViewInfo:viewInfo];
+                    if (str) {
+                        [mstr appendString:str];
+                    }
+                }
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIButton]) {
                 [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
                 if (viewInfo[kUIButtonState]) {
@@ -539,6 +565,13 @@ static NSString * const kUITableViewStyle = @"_style";
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIScrollView]) {
                 [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
             }
+            if (viewInfo[kColorInfo]) {
+                NSString *str = [self backgroundColorWithViewInfo:viewInfo];
+                if (str) {
+                    [mstr appendString:str];
+                }
+            }
+            
             [mstr appendFormat:@"%@\n", [self methodEndLinesWithViewInfo:viewInfo]];
             [self.gettersCode appendFormat:@"%@", mstr];
             
@@ -570,6 +603,70 @@ static NSString * const kUITableViewStyle = @"_style";
     [mstr appendFormat:@"%@\n", second];
     [mstr appendFormat:@"%@", third];
     return mstr;
+}
+
+- (NSString *)backgroundColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    __block NSString *str = nil;
+    
+    NSString *kKey = @"_key";
+    NSString *kRed = @"_red";
+    NSString *kGreen = @"_green";
+    NSString *kBlue = @"_blue";
+    NSString *kAlpha = @"_alpha";
+    if (viewInfo[kColorInfo]) {
+        if ([viewInfo[kColorInfo] isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *colorDict = viewInfo[kColorInfo];
+            if ([colorDict[kKey] isEqualToString:@"backgroundColor"]) {
+                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+            }
+        } if ([viewInfo[kColorInfo] isKindOfClass:[NSArray class]]) {
+            NSArray<NSDictionary<NSString *, id> *> *colorsArray = viewInfo[kColorInfo];
+            [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([colorDict[kKey] isEqualToString:@"backgroundColor"]) {
+                    str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+                    *stop = YES;
+                }
+            }];
+        }
+    }
+    if (str) {
+        return [NSString stringWithFormat:@"        _%@.backgroundColor = %@;\n", viewInfo[kViewUserLabel], str];
+    } else {
+        return nil;
+    }
+}
+
+- (NSString *)textColorWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    __block NSString *str = nil;
+    
+    NSString *kKey = @"_key";
+    NSString *kRed = @"_red";
+    NSString *kGreen = @"_green";
+    NSString *kBlue = @"_blue";
+    NSString *kAlpha = @"_alpha";
+    if (viewInfo[kColorInfo]) {
+        if ([viewInfo[kColorInfo] isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *colorDict = viewInfo[kColorInfo];
+            if ([colorDict[kKey] isEqualToString:@"textColor"]) {
+                str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+            }
+        } if ([viewInfo[kColorInfo] isKindOfClass:[NSArray class]]) {
+            NSArray<NSDictionary<NSString *, id> *> *colorsArray = viewInfo[kColorInfo];
+            [colorsArray enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull colorDict, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([colorDict[kKey] isEqualToString:@"textColor"]) {
+                    str = [NSString stringWithFormat:@"[UIColor colorWithRed:%@ green:%@ blue:%@ alpha:%@]", colorDict[kRed], colorDict[kGreen], colorDict[kBlue], colorDict[kAlpha]];
+                    *stop = YES;
+                }
+            }];
+        }
+    }
+    if (str) {
+        return [NSString stringWithFormat:@"        _%@.textColor = %@;\n", viewInfo[kViewUserLabel], str];
+    } else {
+        return nil;
+    }
 }
 
 #pragma mark -
@@ -697,6 +794,10 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
         d[kVerticalCompressionResistance] = dict[kVerticalCompressionResistance];
     }
     
+    if (dict[kColorInfo]) {
+        d[kColorInfo] = dict[kColorInfo];
+    }
+    
     if ([viewType isEqualToString:kViewTypeUILabel] ||
         [viewType isEqualToString:kViewTypeUITextField] ||
         [viewType isEqualToString:kViewTypeUITextView]) {
@@ -712,6 +813,9 @@ static NSString * (^ViewTypeToClassName)(NSString *viewType) = ^(NSString *viewT
             } else if ([dict[kTextAlignment] isEqualToString:kTextAlignmentJustified]) {
                 d[kTextAlignment] = @"NSTextAlignmentJustified";
             }
+        }
+        if (dict[kFontDescription]) {
+            d[kFontDescription] = dict[kFontDescription];
         }
         
         if ([viewType isEqualToString:kViewTypeUILabel]) {

@@ -7,8 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D9363A7C1FC7EBE2001F3BF9 /* XMLDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = D9363A7B1FC7EBE2001F3BF9 /* XMLDictionary.m */; };
-		D9363A7F1FC7EBF9001F3BF9 /* Cover.m in Sources */ = {isa = PBXBuildFile; fileRef = D9363A7D1FC7EBF9001F3BF9 /* Cover.m */; };
+		D90B82F71FEE408F00968453 /* DVVGenerateGetters.m in Sources */ = {isa = PBXBuildFile; fileRef = D90B82F61FEE408F00968453 /* DVVGenerateGetters.m */; };
+		D90B833D1FEE4AA300968453 /* DVVGenerateAddSubviews.m in Sources */ = {isa = PBXBuildFile; fileRef = D90B833C1FEE4AA300968453 /* DVVGenerateAddSubviews.m */; };
+		D9323A0D1FECFE570094B01F /* DVVGenerateProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A0C1FECFE570094B01F /* DVVGenerateProperties.m */; };
+		D9323A121FECFEBC0094B01F /* XMLDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A111FECFEBC0094B01F /* XMLDictionary.m */; };
+		D9323A151FED01800094B01F /* DVVCover.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A141FED01800094B01F /* DVVCover.m */; };
+		D9323A181FED03900094B01F /* DVVConst.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A171FED03900094B01F /* DVVConst.m */; };
+		D9323A1B1FED0C660094B01F /* DVVGenerateHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */; };
+		D9323A241FED1A590094B01F /* DVVGenerateAutoLayouts.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A231FED1A590094B01F /* DVVGenerateAutoLayouts.m */; };
 		D9DA76FE1FBDA724008E1B5C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D9DA76FD1FBDA724008E1B5C /* AppDelegate.m */; };
 		D9DA77011FBDA724008E1B5C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D9DA77001FBDA724008E1B5C /* ViewController.m */; };
 		D9DA77031FBDA724008E1B5C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9DA77021FBDA724008E1B5C /* Assets.xcassets */; };
@@ -36,10 +42,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D9363A7A1FC7EBE2001F3BF9 /* XMLDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMLDictionary.h; sourceTree = "<group>"; };
-		D9363A7B1FC7EBE2001F3BF9 /* XMLDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMLDictionary.m; sourceTree = "<group>"; };
-		D9363A7D1FC7EBF9001F3BF9 /* Cover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Cover.m; sourceTree = "<group>"; };
-		D9363A7E1FC7EBF9001F3BF9 /* Cover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cover.h; sourceTree = "<group>"; };
+		D90B82F51FEE408F00968453 /* DVVGenerateGetters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateGetters.h; sourceTree = "<group>"; };
+		D90B82F61FEE408F00968453 /* DVVGenerateGetters.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateGetters.m; sourceTree = "<group>"; };
+		D90B833B1FEE4AA300968453 /* DVVGenerateAddSubviews.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateAddSubviews.h; sourceTree = "<group>"; };
+		D90B833C1FEE4AA300968453 /* DVVGenerateAddSubviews.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateAddSubviews.m; sourceTree = "<group>"; };
+		D9323A0B1FECFE570094B01F /* DVVGenerateProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateProperties.h; sourceTree = "<group>"; };
+		D9323A0C1FECFE570094B01F /* DVVGenerateProperties.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateProperties.m; sourceTree = "<group>"; };
+		D9323A101FECFEBC0094B01F /* XMLDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMLDictionary.h; sourceTree = "<group>"; };
+		D9323A111FECFEBC0094B01F /* XMLDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMLDictionary.m; sourceTree = "<group>"; };
+		D9323A131FED01800094B01F /* DVVCover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVCover.h; sourceTree = "<group>"; };
+		D9323A141FED01800094B01F /* DVVCover.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVCover.m; sourceTree = "<group>"; };
+		D9323A161FED03900094B01F /* DVVConst.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVConst.h; sourceTree = "<group>"; };
+		D9323A171FED03900094B01F /* DVVConst.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVConst.m; sourceTree = "<group>"; };
+		D9323A191FED0C660094B01F /* DVVGenerateHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateHandler.h; sourceTree = "<group>"; };
+		D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateHandler.m; sourceTree = "<group>"; };
+		D9323A221FED1A590094B01F /* DVVGenerateAutoLayouts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateAutoLayouts.h; sourceTree = "<group>"; };
+		D9323A231FED1A590094B01F /* DVVGenerateAutoLayouts.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateAutoLayouts.m; sourceTree = "<group>"; };
 		D9DA76F91FBDA724008E1B5C /* DVVXibToCode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DVVXibToCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9DA76FC1FBDA724008E1B5C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D9DA76FD1FBDA724008E1B5C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -83,6 +101,44 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D9323A0A1FECFD9C0094B01F /* DVVXibToCode */ = {
+			isa = PBXGroup;
+			children = (
+				D9323A161FED03900094B01F /* DVVConst.h */,
+				D9323A171FED03900094B01F /* DVVConst.m */,
+				D9323A0B1FECFE570094B01F /* DVVGenerateProperties.h */,
+				D9323A0C1FECFE570094B01F /* DVVGenerateProperties.m */,
+				D90B833B1FEE4AA300968453 /* DVVGenerateAddSubviews.h */,
+				D90B833C1FEE4AA300968453 /* DVVGenerateAddSubviews.m */,
+				D9323A221FED1A590094B01F /* DVVGenerateAutoLayouts.h */,
+				D9323A231FED1A590094B01F /* DVVGenerateAutoLayouts.m */,
+				D90B82F51FEE408F00968453 /* DVVGenerateGetters.h */,
+				D90B82F61FEE408F00968453 /* DVVGenerateGetters.m */,
+				D9323A131FED01800094B01F /* DVVCover.h */,
+				D9323A141FED01800094B01F /* DVVCover.m */,
+				D9323A191FED0C660094B01F /* DVVGenerateHandler.h */,
+				D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */,
+			);
+			path = DVVXibToCode;
+			sourceTree = "<group>";
+		};
+		D9323A0E1FECFEBC0094B01F /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				D9323A0F1FECFEBC0094B01F /* XMLDictionary */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
+		D9323A0F1FECFEBC0094B01F /* XMLDictionary */ = {
+			isa = PBXGroup;
+			children = (
+				D9323A101FECFEBC0094B01F /* XMLDictionary.h */,
+				D9323A111FECFEBC0094B01F /* XMLDictionary.m */,
+			);
+			path = XMLDictionary;
+			sourceTree = "<group>";
+		};
 		D9DA76F01FBDA723008E1B5C = {
 			isa = PBXGroup;
 			children = (
@@ -106,14 +162,12 @@
 		D9DA76FB1FBDA724008E1B5C /* DVVXibToCode */ = {
 			isa = PBXGroup;
 			children = (
+				D9323A0E1FECFEBC0094B01F /* Vendor */,
+				D9323A0A1FECFD9C0094B01F /* DVVXibToCode */,
 				D9DA76FC1FBDA724008E1B5C /* AppDelegate.h */,
 				D9DA76FD1FBDA724008E1B5C /* AppDelegate.m */,
 				D9DA76FF1FBDA724008E1B5C /* ViewController.h */,
 				D9DA77001FBDA724008E1B5C /* ViewController.m */,
-				D9363A7E1FC7EBF9001F3BF9 /* Cover.h */,
-				D9363A7D1FC7EBF9001F3BF9 /* Cover.m */,
-				D9363A7A1FC7EBE2001F3BF9 /* XMLDictionary.h */,
-				D9363A7B1FC7EBE2001F3BF9 /* XMLDictionary.m */,
 				D9DA77021FBDA724008E1B5C /* Assets.xcassets */,
 				D9DA77041FBDA724008E1B5C /* Main.storyboard */,
 				D9DA77071FBDA724008E1B5C /* Info.plist */,
@@ -273,10 +327,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9323A241FED1A590094B01F /* DVVGenerateAutoLayouts.m in Sources */,
 				D9DA77011FBDA724008E1B5C /* ViewController.m in Sources */,
-				D9363A7C1FC7EBE2001F3BF9 /* XMLDictionary.m in Sources */,
-				D9363A7F1FC7EBF9001F3BF9 /* Cover.m in Sources */,
+				D9323A151FED01800094B01F /* DVVCover.m in Sources */,
+				D90B82F71FEE408F00968453 /* DVVGenerateGetters.m in Sources */,
+				D9323A121FECFEBC0094B01F /* XMLDictionary.m in Sources */,
+				D9323A181FED03900094B01F /* DVVConst.m in Sources */,
+				D9323A1B1FED0C660094B01F /* DVVGenerateHandler.m in Sources */,
 				D9DA77091FBDA724008E1B5C /* main.m in Sources */,
+				D90B833D1FEE4AA300968453 /* DVVGenerateAddSubviews.m in Sources */,
+				D9323A0D1FECFE570094B01F /* DVVGenerateProperties.m in Sources */,
 				D9DA76FE1FBDA724008E1B5C /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

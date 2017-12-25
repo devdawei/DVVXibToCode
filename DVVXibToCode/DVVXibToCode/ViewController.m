@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "Cover.h"
+#import "DVVCover.h"
 
 @interface ViewController ()
 
@@ -30,18 +30,18 @@
     
     NSString *path = self.xibFilePathTextField.stringValue;
     NSString *xibFileTypeComboBoxStringValue = self.xibFileTypeComboBox.stringValue;
-    CoverXibType type = CoverXibTypeUIView;
+    DVVCoverXibType type = DVVCoverXibTypeUIView;
     if ([xibFileTypeComboBoxStringValue isEqualToString:@"UIView"]) {
-        type = CoverXibTypeUIView;
+        type = DVVCoverXibTypeUIView;
     } else if ([xibFileTypeComboBoxStringValue isEqualToString:@"UIViewController"]) {
-        type = CoverXibTypeUIViewController;
+        type = DVVCoverXibTypeUIViewController;
     } else if ([xibFileTypeComboBoxStringValue isEqualToString:@"UITableViewCell"]) {
-        type = CoverXibTypeUITableViewCell;
+        type = DVVCoverXibTypeUITableViewCell;
     } else if ([xibFileTypeComboBoxStringValue isEqualToString:@"UICollectionViewCell"]) {
-        type = CoverXibTypeUICollectionViewCell;
+        type = DVVCoverXibTypeUICollectionViewCell;
     }
     
-    Cover *cover = [[Cover alloc] init];
+    DVVCover *cover = [[DVVCover alloc] init];
     self.contentTextView.string = [cover coverAtPath:path xibType:type];
 }
 

@@ -15,6 +15,10 @@
 		D9323A181FED03900094B01F /* DVVConst.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A171FED03900094B01F /* DVVConst.m */; };
 		D9323A1B1FED0C660094B01F /* DVVGenerateHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */; };
 		D9323A241FED1A590094B01F /* DVVGenerateAutoLayouts.m in Sources */ = {isa = PBXBuildFile; fileRef = D9323A231FED1A590094B01F /* DVVGenerateAutoLayouts.m */; };
+		D95C859E1FF3A11F00B914D8 /* DVVXibToCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D95C859D1FF3A11F00B914D8 /* DVVXibToCodeViewController.m */; };
+		D95C85A91FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = D95C85A21FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.m */; };
+		D95C85AA1FF3A18A00B914D8 /* ALView+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = D95C85A51FF3A18A00B914D8 /* ALView+PureLayout.m */; };
+		D95C85AB1FF3A18A00B914D8 /* NSArray+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = D95C85A81FF3A18A00B914D8 /* NSArray+PureLayout.m */; };
 		D9DA76FE1FBDA724008E1B5C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D9DA76FD1FBDA724008E1B5C /* AppDelegate.m */; };
 		D9DA77011FBDA724008E1B5C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D9DA77001FBDA724008E1B5C /* ViewController.m */; };
 		D9DA77031FBDA724008E1B5C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9DA77021FBDA724008E1B5C /* Assets.xcassets */; };
@@ -58,6 +62,17 @@
 		D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateHandler.m; sourceTree = "<group>"; };
 		D9323A221FED1A590094B01F /* DVVGenerateAutoLayouts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVGenerateAutoLayouts.h; sourceTree = "<group>"; };
 		D9323A231FED1A590094B01F /* DVVGenerateAutoLayouts.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVGenerateAutoLayouts.m; sourceTree = "<group>"; };
+		D95C859C1FF3A11F00B914D8 /* DVVXibToCodeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVVXibToCodeViewController.h; sourceTree = "<group>"; };
+		D95C859D1FF3A11F00B914D8 /* DVVXibToCodeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVVXibToCodeViewController.m; sourceTree = "<group>"; };
+		D95C85A01FF3A18A00B914D8 /* PureLayoutDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PureLayoutDefines.h; sourceTree = "<group>"; };
+		D95C85A11FF3A18A00B914D8 /* ALView+PureLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ALView+PureLayout.h"; sourceTree = "<group>"; };
+		D95C85A21FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSLayoutConstraint+PureLayout.m"; sourceTree = "<group>"; };
+		D95C85A31FF3A18A00B914D8 /* NSArray+PureLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+PureLayout.h"; sourceTree = "<group>"; };
+		D95C85A41FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSLayoutConstraint+PureLayout.h"; sourceTree = "<group>"; };
+		D95C85A51FF3A18A00B914D8 /* ALView+PureLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ALView+PureLayout.m"; sourceTree = "<group>"; };
+		D95C85A61FF3A18A00B914D8 /* PureLayout+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PureLayout+Internal.h"; sourceTree = "<group>"; };
+		D95C85A71FF3A18A00B914D8 /* PureLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PureLayout.h; sourceTree = "<group>"; };
+		D95C85A81FF3A18A00B914D8 /* NSArray+PureLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+PureLayout.m"; sourceTree = "<group>"; };
 		D9DA76F91FBDA724008E1B5C /* DVVXibToCode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DVVXibToCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9DA76FC1FBDA724008E1B5C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D9DA76FD1FBDA724008E1B5C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -118,6 +133,8 @@
 				D9323A141FED01800094B01F /* DVVCover.m */,
 				D9323A191FED0C660094B01F /* DVVGenerateHandler.h */,
 				D9323A1A1FED0C660094B01F /* DVVGenerateHandler.m */,
+				D95C859C1FF3A11F00B914D8 /* DVVXibToCodeViewController.h */,
+				D95C859D1FF3A11F00B914D8 /* DVVXibToCodeViewController.m */,
 			);
 			path = DVVXibToCode;
 			sourceTree = "<group>";
@@ -126,6 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				D9323A0F1FECFEBC0094B01F /* XMLDictionary */,
+				D95C859F1FF3A18A00B914D8 /* PureLayout */,
 			);
 			path = Vendor;
 			sourceTree = "<group>";
@@ -137,6 +155,22 @@
 				D9323A111FECFEBC0094B01F /* XMLDictionary.m */,
 			);
 			path = XMLDictionary;
+			sourceTree = "<group>";
+		};
+		D95C859F1FF3A18A00B914D8 /* PureLayout */ = {
+			isa = PBXGroup;
+			children = (
+				D95C85A01FF3A18A00B914D8 /* PureLayoutDefines.h */,
+				D95C85A11FF3A18A00B914D8 /* ALView+PureLayout.h */,
+				D95C85A21FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.m */,
+				D95C85A31FF3A18A00B914D8 /* NSArray+PureLayout.h */,
+				D95C85A41FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.h */,
+				D95C85A51FF3A18A00B914D8 /* ALView+PureLayout.m */,
+				D95C85A61FF3A18A00B914D8 /* PureLayout+Internal.h */,
+				D95C85A71FF3A18A00B914D8 /* PureLayout.h */,
+				D95C85A81FF3A18A00B914D8 /* NSArray+PureLayout.m */,
+			);
+			path = PureLayout;
 			sourceTree = "<group>";
 		};
 		D9DA76F01FBDA723008E1B5C = {
@@ -329,6 +363,9 @@
 			files = (
 				D9323A241FED1A590094B01F /* DVVGenerateAutoLayouts.m in Sources */,
 				D9DA77011FBDA724008E1B5C /* ViewController.m in Sources */,
+				D95C85A91FF3A18A00B914D8 /* NSLayoutConstraint+PureLayout.m in Sources */,
+				D95C85AA1FF3A18A00B914D8 /* ALView+PureLayout.m in Sources */,
+				D95C85AB1FF3A18A00B914D8 /* NSArray+PureLayout.m in Sources */,
 				D9323A151FED01800094B01F /* DVVCover.m in Sources */,
 				D90B82F71FEE408F00968453 /* DVVGenerateGetters.m in Sources */,
 				D9323A121FECFEBC0094B01F /* XMLDictionary.m in Sources */,
@@ -337,6 +374,7 @@
 				D9DA77091FBDA724008E1B5C /* main.m in Sources */,
 				D90B833D1FEE4AA300968453 /* DVVGenerateAddSubviews.m in Sources */,
 				D9323A0D1FECFE570094B01F /* DVVGenerateProperties.m in Sources */,
+				D95C859E1FF3A11F00B914D8 /* DVVXibToCodeViewController.m in Sources */,
 				D9DA76FE1FBDA724008E1B5C /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

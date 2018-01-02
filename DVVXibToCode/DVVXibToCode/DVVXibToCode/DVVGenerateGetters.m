@@ -19,98 +19,43 @@
     [viewsOrder enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSDictionary<NSString *, id> *viewInfo = viewsInfo[obj];
         if (!JudgeIsRoot(viewInfo[kViewUserLabel])) {
-            NSMutableString *mstr = [NSMutableString stringWithString:[self methodBeginLinesWithViewInfo:viewInfo]];
+            __block NSMutableArray<NSString *> *tempArray = [NSMutableArray array];
             if ([viewInfo[kViewType] isEqualToString:kViewTypeUIView]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUILabel] ||
-                       [viewInfo[kViewType] isEqualToString:kViewTypeUITextField] ||
-                       [viewInfo[kViewType] isEqualToString:kViewTypeUITextView]) {
-                if ([viewInfo[kViewType] isEqualToString:kViewTypeUILabel]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-                    if (viewInfo[kTextNumberOfLines]) {
-                        [mstr appendFormat:@"        _%@.numberOfLines = %@;\n", viewInfo[kViewUserLabel], viewInfo[kTextNumberOfLines]];
-                    }
-                    if (viewInfo[kText]) {
-                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kText]];
-                    }
-                } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextField]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-                    if (viewInfo[kTextFieldPlaceholder]) {
-                        [mstr appendFormat:@"        _%@.placeholder = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kTextFieldPlaceholder]];
-                    }
-                } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextView]) {
-                    [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-                    if (viewInfo[kTextViewString]) {
-                        [mstr appendFormat:@"        _%@.text = @\"%@\";\n", viewInfo[kViewUserLabel], viewInfo[kTextViewString][kTextViewText]];
-                    }
-                }
-                if (viewInfo[kTextAlignment]) {
-                    NSString *str = nil;
-                    if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentNatural]) {
-                        /*
-                         NSTextAlignmentNatural // 默认对齐方式
-                         */
-                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentCenter]) {
-                        str = @"NSTextAlignmentCenter";
-                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentRight]) {
-                        str = @"NSTextAlignmentRight";
-                    } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentJustified]) {
-                        str = @"NSTextAlignmentJustified";
-                    }
-                    if (str) {
-                        [mstr appendFormat:@"        _%@.textAlignment = %@;\n", viewInfo[kViewUserLabel], str];
-                    }
-                }
-                NSString *font = [self fontWithViewInfo:viewInfo];
-                if (font) {
-                    [mstr appendFormat:@"        _%@.font = %@;\n", viewInfo[kViewUserLabel], font];
-                }
-                NSString *textColor = [self textColorWithViewInfo:viewInfo];
-                if (textColor) {
-                    [mstr appendString:textColor];
-                }
+                // UIView
+                [tempArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+                [tempArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUILabel]) {
+                // UILabel
+                [tempArray addObjectsFromArray:[self labelCodeWithViewInfo:viewInfo]];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextField]) {
+                // UITextField
+                [tempArray addObjectsFromArray:[self textFieldCodeWithViewInfo:viewInfo]];
+            } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITextView]) {
+                // UITextView
+                [tempArray addObjectsFromArray:[self textViewCodeWithViewInfo:viewInfo]];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIButton]) {
-                [mstr appendFormat:@"        _%@ = [%@ buttonWithType:UIButtonTypeSystem];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-                NSString *font = [self fontWithViewInfo:viewInfo];
-                if (font) {
-                    [mstr appendFormat:@"        _%@.titleLabel.font = %@;\n", viewInfo[kViewUserLabel], font];
-                }
-                if (viewInfo[kUIButtonState]) {
-                    NSString *titleColor = [self titleColorWithViewInfo:viewInfo];
-                    if (titleColor) {
-                        [mstr appendString:titleColor];
-                    }
-                    if (viewInfo[kUIButtonState][kUIButtonTitle]) {
-                        [mstr appendFormat:@"        [_%@ setTitle:@\"%@\" forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], viewInfo[kUIButtonState][kUIButtonTitle]];
-                    }
-                }
+                // UIButton
+                [tempArray addObjectsFromArray:[self buttonCodeWithViewInfo:viewInfo]];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIImageView]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
-                if (viewInfo[kUIImageViewImage]) {
-                    if (viewInfo[kUIImageViewImage]) {
-                        [mstr appendFormat:@"        _%@.image = [UIImage imageNamed:@\"%@\"];\n", viewInfo[kViewUserLabel], viewInfo[kUIImageViewImage]];
-                    }
-                }
+                // UIImageView
+                [tempArray addObjectsFromArray:[self imageViewCodeWithViewInfo:viewInfo]];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUISwitch]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                // UISwitch
+                [tempArray addObjectsFromArray:[self switchCodeWithViewInfo:viewInfo]];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUITableView]) {
-                NSString *str = nil;
-                if ([viewInfo[kUITableViewStyle] isEqualToString:@"plain"]) {
-                    str = @"UITableViewStylePlain";
-                }  else if ([viewInfo[kUITableViewStyle] isEqualToString:@"grouped"]) {
-                    str = @"UITableViewStyleGrouped";
-                }
-                [mstr appendFormat:@"        _%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];\n", viewInfo[kViewUserLabel], str];
+                // UITableView
+                [tempArray addObjectsFromArray:[self tableViewCodeWithViewInfo:viewInfo]];
             } else if ([viewInfo[kViewType] isEqualToString:kViewTypeUIScrollView]) {
-                [mstr appendFormat:@"        _%@ = [[%@ alloc] init];\n", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])];
+                // UIScrollView
+                [tempArray addObjectsFromArray:[self scrollViewCodeWithViewInfo:viewInfo]];
             }
-            NSString *backgroundColor = [self backgroundColorWithViewInfo:viewInfo];
-            if (backgroundColor) {
-                [mstr appendString:backgroundColor];
-            }
-            
-            [mstr appendFormat:@"%@", [self methodEndLinesWithViewInfo:viewInfo]];
-            [codesArray addObject:mstr];
+            NSMutableArray *array = [NSMutableArray array];
+            [tempArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                [array addObject:[NSString stringWithFormat:@"    %@", obj]];
+            }];
+            [array insertObject:[self methodBeginLinesWithViewInfo:viewInfo] atIndex:0];
+            [array addObject:[self methodEndLinesWithViewInfo:viewInfo]];
+            [codesArray addObject:[array componentsJoinedByString:@"\n"]];
         }
     }];
     return [codesArray componentsJoinedByString:@"\n\n"];
@@ -122,7 +67,7 @@
     NSString *first = [NSString stringWithFormat:@"- (%@ *)%@ {", ViewTypeToClassName(viewInfo[kViewType]), viewInfo[kViewUserLabel]];
     NSString *second = [NSString stringWithFormat:@"    if (!_%@) {", viewInfo[kViewUserLabel]];
     [mstr appendFormat:@"%@\n", first];
-    [mstr appendFormat:@"%@\n", second];
+    [mstr appendString:second];
     return mstr;
 }
 
@@ -134,7 +79,7 @@
     NSString *third = @"}";
     [mstr appendFormat:@"%@\n", first];
     [mstr appendFormat:@"%@\n", second];
-    [mstr appendFormat:@"%@", third];
+    [mstr appendString:third];
     return mstr;
 }
 
@@ -158,7 +103,7 @@
     
     NSString *str = [self colorWithKey:@"backgroundColor" colorInfo:viewInfo[kColorInfo]];
     if (str) {
-        return [NSString stringWithFormat:@"        _%@.backgroundColor = %@;\n", viewInfo[kViewUserLabel], str];
+        return [NSString stringWithFormat:@"_%@.backgroundColor = %@;", viewInfo[kViewUserLabel], str];
     } else {
         return nil;
     }
@@ -168,7 +113,7 @@
     
     NSString *str = [self colorWithKey:@"textColor" colorInfo:viewInfo[kColorInfo]];
     if (str) {
-        return [NSString stringWithFormat:@"        _%@.textColor = %@;\n", viewInfo[kViewUserLabel], str];
+        return [NSString stringWithFormat:@"_%@.textColor = %@;", viewInfo[kViewUserLabel], str];
     } else {
         return nil;
     }
@@ -178,7 +123,7 @@
     
     NSString *str = [self colorWithKey:@"titleColor" colorInfo:viewInfo[kUIButtonState][kColorInfo]];
     if (str) {
-        return [NSString stringWithFormat:@"        [_%@ setTitleColor:%@ forState:UIControlStateNormal];\n", viewInfo[kViewUserLabel], str];
+        return [NSString stringWithFormat:@"[_%@ setTitleColor:%@ forState:UIControlStateNormal];", viewInfo[kViewUserLabel], str];
     } else {
         return nil;
     }
@@ -228,6 +173,183 @@
         return nil;
     }
 }
+
++ (NSString *)textAlignmentWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSString *str = nil;
+    if (viewInfo[kTextAlignment]) {
+        if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentNatural]) {
+            /*
+             NSTextAlignmentNatural // 默认对齐方式
+             */
+        } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentCenter]) {
+            str = @"NSTextAlignmentCenter";
+        } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentRight]) {
+            str = @"NSTextAlignmentRight";
+        } else if ([viewInfo[kTextAlignment] isEqualToString:kTextAlignmentJustified]) {
+            str = @"NSTextAlignmentJustified";
+        }
+        if (str) {
+            str = [NSString stringWithFormat:@"_%@.textAlignment = %@;", viewInfo[kViewUserLabel], str];
+        }
+    }
+    return str;
+}
+
+#pragma mark -
+
++ (NSMutableArray<NSString *> *)viewCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    NSString *backgroundColor = [self backgroundColorWithViewInfo:viewInfo];
+    if (backgroundColor) {
+        [codesArray addObject:backgroundColor];
+    }
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)labelCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    NSString *font = [self fontWithViewInfo:viewInfo];
+    if (font) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.font = %@;", viewInfo[kViewUserLabel], font]];
+    }
+    if (viewInfo[kTextNumberOfLines]) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.numberOfLines = %@;", viewInfo[kViewUserLabel], viewInfo[kTextNumberOfLines]]];
+    }
+    NSString *textColor = [self textColorWithViewInfo:viewInfo];
+    if (textColor) {
+        [codesArray addObject:textColor];
+    }
+    NSString *textAlignment = [self textAlignmentWithViewInfo:viewInfo];
+    if (textAlignment) {
+        [codesArray addObject:textAlignment];
+    }
+    if (viewInfo[kText]) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.text = @\"%@\";", viewInfo[kViewUserLabel], viewInfo[kText]]];
+    }
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)textFieldCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    NSString *font = [self fontWithViewInfo:viewInfo];
+    if (font) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.font = %@;", viewInfo[kViewUserLabel], font]];
+    }
+    NSString *textColor = [self textColorWithViewInfo:viewInfo];
+    if (textColor) {
+        [codesArray addObject:textColor];
+    }
+    NSString *textAlignment = [self textAlignmentWithViewInfo:viewInfo];
+    if (textAlignment) {
+        [codesArray addObject:textAlignment];
+    }
+    if (viewInfo[kTextFieldPlaceholder]) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.placeholder = @\"%@\";", viewInfo[kViewUserLabel], viewInfo[kTextFieldPlaceholder]]];
+    }
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)textViewCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    NSString *font = [self fontWithViewInfo:viewInfo];
+    if (font) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.font = %@;", viewInfo[kViewUserLabel], font]];
+    }
+    NSString *textColor = [self textColorWithViewInfo:viewInfo];
+    if (textColor) {
+        [codesArray addObject:textColor];
+    }
+    NSString *textAlignment = [self textAlignmentWithViewInfo:viewInfo];
+    if (textAlignment) {
+        [codesArray addObject:textAlignment];
+    }
+    if (viewInfo[kTextViewString]) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.text = @\"%@\";", viewInfo[kViewUserLabel], viewInfo[kTextViewString][kTextViewText]]];
+    }
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)buttonCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [%@ buttonWithType:UIButtonTypeSystem];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    NSString *font = [self fontWithViewInfo:viewInfo];
+    if (font) {
+        [codesArray addObject:[NSString stringWithFormat:@"_%@.titleLabel.font = %@;", viewInfo[kViewUserLabel], font]];
+    }
+    if (viewInfo[kUIButtonState]) {
+        NSString *titleColor = [self titleColorWithViewInfo:viewInfo];
+        if (titleColor) {
+            [codesArray addObject:titleColor];
+        }
+        if (viewInfo[kUIButtonState][kUIButtonTitle]) {
+            [codesArray addObject:[NSString stringWithFormat:@"[_%@ setTitle:@\"%@\" forState:UIControlStateNormal];", viewInfo[kViewUserLabel], viewInfo[kUIButtonState][kUIButtonTitle]]];
+        }
+    }
+
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)imageViewCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    if (viewInfo[kUIImageViewImage]) {
+        if (viewInfo[kUIImageViewImage]) {
+            [codesArray addObject:[NSString stringWithFormat:@"_%@.image = [UIImage imageNamed:@\"%@\"];", viewInfo[kViewUserLabel], viewInfo[kUIImageViewImage]]];
+        }
+    }
+    
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)switchCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)tableViewCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    NSString *str = nil;
+    if ([viewInfo[kUITableViewStyle] isEqualToString:@"plain"]) {
+        str = @"UITableViewStylePlain";
+    }  else if ([viewInfo[kUITableViewStyle] isEqualToString:@"grouped"]) {
+        str = @"UITableViewStyleGrouped";
+    }
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[UITableView alloc] initWithFrame:CGRectZero style:%@];", viewInfo[kViewUserLabel], str]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    
+    return codesArray;
+}
+
++ (NSMutableArray<NSString *> *)scrollViewCodeWithViewInfo:(NSDictionary<NSString *, id> *)viewInfo {
+    
+    NSMutableArray<NSString *> *codesArray = [NSMutableArray array];
+    [codesArray addObject:[NSString stringWithFormat:@"_%@ = [[%@ alloc] init];", viewInfo[kViewUserLabel], ViewTypeToClassName(viewInfo[kViewType])]];
+    [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
+    
+    return codesArray;
+}
+
+#pragma mark -
 
 + (NSString *)handleGetterFontSize:(NSString *)fontSize {
     

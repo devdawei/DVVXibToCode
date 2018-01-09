@@ -29,6 +29,7 @@
     DVVXibToCodeViewController *xibToCodeVC = [[DVVXibToCodeViewController alloc] init];
     
     NSWindow *window = [NSWindow windowWithContentViewController:xibToCodeVC];
+    window.title = @"DVVXibToCode";
     [window setContentSize:CGSizeMake(600, 800)];
     
     NSWindowController *windowController = [[NSWindowController alloc] initWithWindow:window];

@@ -309,7 +309,7 @@
     [codesArray addObjectsFromArray:[self viewCodeWithViewInfo:viewInfo]];
     if (viewInfo[kUIImageViewImage]) {
         if (viewInfo[kUIImageViewImage]) {
-            [codesArray addObject:[NSString stringWithFormat:@"_%@.image = [UIImage imageNamed:@\"%@\"];", viewInfo[kViewUserLabel], viewInfo[kUIImageViewImage]]];
+            [codesArray addObject:[NSString stringWithFormat:@"_%@.image = %@;", viewInfo[kViewUserLabel], [self handleGetterImage:viewInfo[kUIImageViewImage]]]];
         }
     }
     
@@ -376,6 +376,24 @@
         }
     } else {
         return colorCode();
+    }
+}
+
++ (NSString *)handleGetterImage:(NSString *)image {
+    
+    NSString * (^imageCode)(void) = ^(void) {
+        return [NSString stringWithFormat:@"[UIImage imageNamed:@\"%@\"]", image];
+    };
+    DVVGenerateHandler *handler = [DVVGenerateHandler shared];
+    if (handler.delegate && [handler.delegate respondsToSelector:@selector(handleGetterImage:)]) {
+        NSString *str = [handler.delegate handleGetterImage:image];
+        if (str) {
+            return str;
+        } else {
+            return imageCode();
+        }
+    } else {
+        return imageCode();
     }
 }
 

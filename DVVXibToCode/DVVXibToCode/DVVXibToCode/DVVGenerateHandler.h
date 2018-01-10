@@ -29,5 +29,6 @@
 
 - (NSString *)handleGetterFontSize:(NSString *)fontSize;
 - (NSString *)handleGetterColorWithRed:(NSString *)red green:(NSString *)green blue:(NSString *)blue alpha:(NSString *)alpha;
+- (NSString *)handleGetterImage:(NSString *)image;
 
 @end

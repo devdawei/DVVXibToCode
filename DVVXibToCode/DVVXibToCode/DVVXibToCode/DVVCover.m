@@ -7,7 +7,7 @@
 //
 
 #import "DVVCover.h"
-#import "XMLDictionary.h"
+#import <XMLDictionary.h>
 #import "DVVGenerateProperties.h"
 #import "DVVGenerateAddSubviews.h"
 #import "DVVGenerateAutoLayouts.h"

@@ -7,7 +7,7 @@
 //
 
 #import "DVVXibToCodeViewController.h"
-#import "PureLayout.h"
+#import <PureLayout.h>
 #import "DVVCover.h"
 
 @interface DVVXibToCodeViewController ()

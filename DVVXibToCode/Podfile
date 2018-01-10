@@ -1,0 +1,7 @@
+
+target "DVVXibToCode" do
+    
+    pod 'XMLDictionary', '~> 1.4.1'
+    pod 'PureLayout', '~> 3.0.2'
+    
+end

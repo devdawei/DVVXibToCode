@@ -9,7 +9,7 @@ s.homepage     = 'https://github.com/devdawei'
 
 s.requires_arc = true
 
-s.source       = { :git => 'https://github.com/devdawei/DVVXibToCode.git', :tag => s.version.to_s }
+s.source       = { :git => 'https://github.com/devdawei/DVVXibToCode.git', :tag => 'v1.0.0' }
 
 s.source_files = 'DVVXibToCode/DVVXibToCode/DVVXibToCode/*.{h,m}'
 

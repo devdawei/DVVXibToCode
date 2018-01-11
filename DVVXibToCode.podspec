@@ -17,7 +17,4 @@ s.source_files = 'DVVXibToCode/DVVXibToCode/DVVXibToCode/*.{h,m}'
 
 s.frameworks = 'Foundation'
 
-s.dependency 'XMLDictionary'
-s.dependency 'PureLayout'
-
 end

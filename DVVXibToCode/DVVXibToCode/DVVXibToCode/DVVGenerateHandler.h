@@ -11,7 +11,7 @@
 
 @interface DVVGenerateHandler : NSObject
 
-@property (nonatomic, weak) id<DVVGenerateHandlerDelegate> delegate;
+@property (nonatomic, assign) id<DVVGenerateHandlerDelegate> delegate;
 
 + (instancetype)shared;
 

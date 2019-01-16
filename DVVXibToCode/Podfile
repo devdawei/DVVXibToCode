@@ -1,7 +1,7 @@
 
 target "DVVXibToCode" do
     
-    pod 'XMLDictionary', '~> 1.4.1'
-    pod 'PureLayout', '~> 3.0.2'
+    pod 'XMLDictionary', '~> 1.4.1', :inhibit_warnings => true
+    pod 'PureLayout', '~> 3.0.2', :inhibit_warnings => true
     
 end

@@ -63,6 +63,7 @@
     static NSString *kSecondItem = @"_secondItem";
     static NSString *kConstant = @"_constant";
     static NSString *kMultiplier = @"_multiplier";
+    static NSString *kRelation = @"_relation";
     
     static NSString * (^ConvertAttributeName)(NSString *attributeName) = ^(NSString *attributeName) {
         if ([attributeName isEqualToString:@"leading"]) {
@@ -82,6 +83,16 @@
         } else if ([attributeName isEqualToString:@"height"]) {
             return @"ALDimensionHeight";
         }
+        return @"";
+    };
+    
+    static NSString * (^ConvertRelation)(NSString *relation) = ^(NSString *relation) {
+        if ([relation isEqualToString:@"greaterThanOrEqual"]) {
+            return @"NSLayoutRelationGreaterThanOrEqual";
+        } else if ([relation isEqualToString:@"lessThanOrEqual"]) {
+            return @"NSLayoutRelationLessThanOrEqual";
+        }
+        // NSLayoutRelationEqual
         return @"";
     };
     
@@ -148,6 +159,9 @@
                 [layoutStr appendFormat:@" withOffset:%@", [self handleAutoLayoutOffset:constraintDict[kConstant]]];
             }
         }
+        if (constraintDict[kRelation]) {
+            [layoutStr appendFormat:@" relation:%@", ConvertRelation(constraintDict[kRelation])];
+        }
         [layoutStr appendString:@"];"];
     } else if ([firstAttributeName isEqualToString:@"ALAxisVertical"] ||
                [firstAttributeName isEqualToString:@"ALAxisHorizontal"]) {
@@ -212,10 +226,18 @@
                 layoutStr = [NSMutableString stringWithFormat:@"[%@ autoMatchDimension:%@ toDimension:%@ ofView:%@];", viewName, firstAttributeName, secondAttributeName, ofViewName];
             } else {
                 if (constraintDict[kMultiplier]) {
-                    multiplierString = [NSMutableString stringWithFormat:@"[%@ autoMatchDimension:%@ toDimension:%@ ofView:%@ withMultiplier:%@];", viewName, firstAttributeName, secondAttributeName, ofViewName, HandleMultiplier(constraintDict[kMultiplier])];
+                    multiplierString = [NSMutableString stringWithFormat:@"[%@ autoMatchDimension:%@ toDimension:%@ ofView:%@ withMultiplier:%@", viewName, firstAttributeName, secondAttributeName, ofViewName, HandleMultiplier(constraintDict[kMultiplier])];
+                    if (constraintDict[kRelation]) {
+                        [multiplierString appendFormat:@" relation:%@", ConvertRelation(constraintDict[kRelation])];
+                    }
+                    [multiplierString appendString:@"];"];
                 }
                 if (constraintDict[kConstant]) {
-                    constantString = [NSMutableString stringWithFormat:@"[%@ autoMatchDimension:%@ toDimension:%@ ofView:%@ withOffset:%@];", viewName, firstAttributeName, secondAttributeName, ofViewName, [self handleAutoLayoutOffset:constraintDict[kConstant]]];
+                    constantString = [NSMutableString stringWithFormat:@"[%@ autoMatchDimension:%@ toDimension:%@ ofView:%@ withOffset:%@", viewName, firstAttributeName, secondAttributeName, ofViewName, [self handleAutoLayoutOffset:constraintDict[kConstant]]];
+                    if (constraintDict[kRelation]) {
+                        [constantString appendFormat:@" relation:%@", ConvertRelation(constraintDict[kRelation])];
+                    }
+                    [constantString appendString:@"];"];
                 }
                 
                 if (!layoutStr) {

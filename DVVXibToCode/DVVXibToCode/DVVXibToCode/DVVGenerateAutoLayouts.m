@@ -99,7 +99,7 @@
     };
     
     NSString * (^HandleMultiplier)(NSString *multiplier) = ^(NSString *multiplier) {
-        NSArray<NSString *> *array = [multiplier componentsSeparatedByString:@":"];
+        NSArray<NSString *> *array = [multiplier componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@":/"]];
         if (array.count == 1) {
             return [NSString stringWithFormat:@"%.2f",array.firstObject.floatValue];
         } else {

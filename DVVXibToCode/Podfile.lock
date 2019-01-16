@@ -1,15 +1,20 @@
 PODS:
-  - PureLayout (3.0.2)
+  - PureLayout (3.1.2)
   - XMLDictionary (1.4.1)
 
 DEPENDENCIES:
-  - PureLayout (~> 3.0.2)
+  - PureLayout (~> 3.1.2)
   - XMLDictionary (~> 1.4.1)
 
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - PureLayout
+    - XMLDictionary
+
 SPEC CHECKSUMS:
-  PureLayout: 4d550abe49a94f24c2808b9b95db9131685fe4cd
+  PureLayout: 4634d0b61e3b5021166e8ec7c18e9e0ca0720c8b
   XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
 
-PODFILE CHECKSUM: 532a44549286fc3c6cd4a2fb53183ee4337660d5
+PODFILE CHECKSUM: 30c2c6ce5980a4688e282b0bcb1b4f5158372cd5
 
-COCOAPODS: 1.3.1
+COCOAPODS: 1.5.3

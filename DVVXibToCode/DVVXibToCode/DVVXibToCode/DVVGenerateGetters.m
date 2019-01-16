@@ -94,6 +94,8 @@
         return [NSString stringWithFormat:@"[UIFont boldSystemFontOfSize:%@]", [self handleGetterFontSize:fontDescDict[@"_pointSize"]]];
     } else if ([fontDescDict[@"_type"] isEqualToString:@"system"]) {
         return [NSString stringWithFormat:@"[UIFont systemFontOfSize:%@]", [self handleGetterFontSize:fontDescDict[@"_pointSize"]]];
+    } else if (fontDescDict[@"_name"]) {
+        return [NSString stringWithFormat:@"[UIFont fontWithName:@\"%@\" size:%@]", fontDescDict[@"_name"], [self handleGetterFontSize:fontDescDict[@"_pointSize"]]];
     } else {
         return nil;
     }
